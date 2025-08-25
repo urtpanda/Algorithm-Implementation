@@ -1,4 +1,3 @@
-
 #include <bits/stdc++.h>
 using namespace std;
 
@@ -7,39 +6,65 @@ int main() {
     cout << "Enter the number of processes: ";
     cin >> n;
 
-    int processes[n], burst_time[n], arrival_time[n], waiting_time[n], turnaround_time[n];
+    vector<int> processes(n);
+    vector<int> burst_time(n);
+    vector<int> arrival_time(n);
+    vector<int> remaining_time(n);
+    vector<int> waiting_time(n, 0);
+    vector<int> turnaround_time(n, 0);
 
-    // Input burst time and arrival time
     for (int i = 0; i < n; i++) {
-        processes[i] = i + 1;
-        cout << "Enter burst time for process " << i + 1 << ": ";
+        processes[i] = i;
+        cout << "Enter burst time for process " << i << ": ";
         cin >> burst_time[i];
-        cout << "Enter arrival time for process " << i + 1 << ": ";
+        cout << "Enter arrival time for process " << i << ": ";
         cin >> arrival_time[i];
+        remaining_time[i] = burst_time[i]; // Initialize remaining time
     }
 
-    int service_time[n];
-    service_time[0] = arrival_time[0];
-    waiting_time[0] = 0;
+    int completed = 0;
+    int current_time = 0;
+    bool found = false;
 
-    // Calculate waiting time
-    for (int i = 1; i < n; i++) {
-        service_time[i] = service_time[i - 1] + burst_time[i - 1];
-        waiting_time[i] = service_time[i] - arrival_time[i];
-        if (waiting_time[i] < 0)
-            waiting_time[i] = 0;
+    while (completed != n) {
+        int earliest_arrival = INT_MAX;
+        int idx = -1;
+
+        // Find the process that has arrived and not yet completed
+        for (int i = 0; i < n; i++) {
+            if (arrival_time[i] <= current_time && remaining_time[i] > 0) {
+                if (arrival_time[i] < earliest_arrival) {
+                    earliest_arrival = arrival_time[i];
+                    idx = i;
+                    found = true;
+                }
+            }
+        }
+
+        if (!found) {
+            current_time++;
+            continue;
+        }
+
+        // Execute the process completely (Non-preemptive)
+        current_time += remaining_time[idx];
+        waiting_time[idx] = current_time - burst_time[idx] - arrival_time[idx];
+        if (waiting_time[idx] < 0) waiting_time[idx] = 0;
+        turnaround_time[idx] = burst_time[idx] + waiting_time[idx];
+
+        remaining_time[idx] = 0; // Mark process as completed
+        completed++;
+        found = false;
     }
 
-    // Calculate turnaround time
-    for (int i = 0; i < n; i++) {
-        turnaround_time[i] = burst_time[i] + waiting_time[i];
-    }
-
-    // Print results
+    // Display results
     cout << "\nProcess\tBurst Time\tArrival Time\tWaiting Time\tTurnaround Time\n";
     for (int i = 0; i < n; i++) {
-        cout << processes[i] << "\t" << burst_time[i] << "\t\t" << arrival_time[i]
-             << "\t\t" << waiting_time[i] << "\t\t" << turnaround_time[i] << endl;
+        cout << processes[i] << "\t"
+             << burst_time[i] << "\t\t"
+             << arrival_time[i] << "\t\t"
+             << waiting_time[i] << "\t\t"
+             << turnaround_time[i] << endl;
     }
 
     return 0;
